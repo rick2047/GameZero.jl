@@ -42,6 +42,12 @@ function image_surface(image::String)
     return sf
 end
 
+function text_surface(text::String, font_name::String, font_size, color)
+    font = SDL2.TTF_OpenFont(file_path(font_name, :fonts), font_size)
+    sf = SDL2.TTF_RenderText_Blended(font, text, SDL2.Color(color...))
+    return sf
+end
+
 function file_path(name::String, subdir::Symbol)
     path = joinpath(game[].location, String(subdir))
     @assert isdir(path)

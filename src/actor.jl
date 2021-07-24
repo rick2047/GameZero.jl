@@ -1,6 +1,5 @@
 
 mutable struct Actor
-    image::String
     surface::Ptr{SDL2.Surface}
     position::Rect
     scale::Vector{Float64}
@@ -14,10 +13,10 @@ end
 
 Creates an Actor with the image given, which must be located in the `image` subdirectory.
 """
-function Actor(image::String; kv...)
-    sf=image_surface(image)
+function Actor(imageName::String; kv...)
+    sf=image_surface(imageName)
     w, h = size(sf)
-    a = Actor(image, sf, Rect(0, 0, Int(w), Int(h)), [1.0, 1.0], 0, 255, Dict{Symbol,Any}())
+    a = Actor(sf, Rect(0, 0, Int(w), Int(h)), [1.0, 1.0], 0, 255, Dict{Symbol,Any}(:image=>imageName))
 
     for (k, v) in kv
         setproperty!(a, k, v)
@@ -26,17 +25,20 @@ function Actor(image::String; kv...)
 end
 
 function TextActor(text::String, font_name::String; font_size=24, color=Int[255,255,0,255], kv...)
-    font = SDL2.TTF_OpenFont(file_path(font_name, :fonts), font_size)
-    sf = SDL2.TTF_RenderText_Blended(font, text, SDL2.Color(color...))
+    sf = text_surface(text, font_name, font_size, color)
     w, h = size(sf)
     a = Actor(
-        text, 
         sf, 
         Rect(0, 0, Int(w), Int(h)), 
         [1.,1.], 
         0,
         255,
-        Dict{Symbol,Any}()
+        Dict{Symbol,Any}(
+            :font_name=>font_name,
+            :font_size=>font_size,
+            :color=>color,
+            :text=>text
+        )
     )
 
     for (k, v) in kv
@@ -45,6 +47,12 @@ function TextActor(text::String, font_name::String; font_size=24, color=Int[255,
     return a
 end
 
+function set_text!(a::Actor, text::String)
+    a.text = text
+    a.surface = text_surface(text, a.font_name, a.font_size, a.color)
+    w, h = size(a.surface)
+    a.position = Rect(0, 0, Int(w), Int(h))
+end
 
 function Base.setproperty!(s::Actor, p::Symbol, x)
     if p == :image
